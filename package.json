@@ -20,7 +20,8 @@
     "build": "tsc",
     "check": "tsc --noEmit",
     "test": "npm run build && node --test dist/**/*.test.js",
-    "smoke": "npm run build && node dist/cli.js write --repo fixtures/smoke-repo --base main --head feature/review-ledger --out /tmp/patchledger-smoke.md && node dist/cli.js verify --repo fixtures/smoke-repo --base main --head feature/review-ledger --max-files-per-commit 4",
+    "fixtures:prepare": "bash fixtures/prepare-smoke-repo.sh",
+    "smoke": "npm run build && npm run fixtures:prepare && node dist/cli.js write --repo fixtures/smoke-repo --base main --head feature/review-ledger --test-log fixtures/smoke-repo/test.log --out /tmp/patchledger-smoke.md && node dist/cli.js verify --repo fixtures/smoke-repo --base main --head feature/review-ledger --test-log fixtures/smoke-repo/test.log --max-files-per-commit 4",
     "package:smoke": "npm pack --dry-run",
     "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
   },

@@ -6,3 +6,4 @@ coverage/
 .env
 .logs/
 docs/PATCH_LEDGER.md
+fixtures/smoke-repo/
