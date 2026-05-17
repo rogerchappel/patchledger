@@ -4,7 +4,7 @@
   "description": "Local-first git patch evidence ledger CLI for reviewable branches.",
   "type": "module",
   "bin": {
-    "patchledger": "./dist/cli.js"
+    "patchledger": "./dist/src/cli.js"
   },
   "main": "./dist/index.js",
   "exports": {
@@ -21,7 +21,7 @@
     "check": "tsc --noEmit",
     "test": "npm run build && node --test dist/**/*.test.js",
     "fixtures:prepare": "bash fixtures/prepare-smoke-repo.sh",
-    "smoke": "npm run build && npm run fixtures:prepare && node dist/cli.js write --repo fixtures/smoke-repo --base main --head feature/review-ledger --test-log fixtures/smoke-repo/test.log --out /tmp/patchledger-smoke.md && node dist/cli.js verify --repo fixtures/smoke-repo --base main --head feature/review-ledger --test-log fixtures/smoke-repo/test.log --max-files-per-commit 4",
+    "smoke": "npm run build && npm run fixtures:prepare && node dist/src/cli.js write --repo fixtures/smoke-repo --base main --head feature/review-ledger --test-log fixtures/smoke-repo/test.log --out /tmp/patchledger-smoke.md && node dist/src/cli.js verify --repo fixtures/smoke-repo --base main --head feature/review-ledger --test-log fixtures/smoke-repo/test.log --max-files-per-commit 4",
     "package:smoke": "npm pack --dry-run",
     "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
   },
