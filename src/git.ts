@@ -25,7 +25,8 @@ export async function listCommits(repo: string, base: string, head: string): Pro
     .map((entry) => entry.trim())
     .filter(Boolean)
     .map((entry) => {
-      const [hash, shortHash, subject, body, authorName, authorEmail, authorDate] = entry.split(fieldSeparator);
+      const fields = entry.startsWith(fieldSeparator) ? entry.slice(fieldSeparator.length).split(fieldSeparator) : entry.split(fieldSeparator);
+      const [hash, shortHash, subject, body, authorName, authorEmail, authorDate] = fields;
       return {
         hash,
         shortHash,
