@@ -9,19 +9,27 @@ security posture before using it in production.
 
 ## Install
 
-Replace this section with the generated repository's installation steps.
+Install dependencies and build the CLI from a checkout:
 
 ```sh
-pnpm install
+npm install
+npm run build
 ```
 
 ## Use
 
-Replace this section with the smallest useful example for the generated
-repository.
+Write and verify a review ledger for the bundled smoke repository:
 
 ```sh
-pnpm dev
+npm run smoke
+```
+
+For a local repository, build first and then run the CLI with explicit base and
+head refs:
+
+```sh
+node dist/src/cli.js write --repo /path/to/repo --base main --head feature/branch --out patchledger.md
+node dist/src/cli.js verify --repo /path/to/repo --base main --head feature/branch
 ```
 
 ## Verify
