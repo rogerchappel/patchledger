@@ -11,6 +11,10 @@ export interface FixtureRepo {
   testLog: string;
 }
 
+export interface RenameFixtureRepo extends FixtureRepo {
+  renameCommit: string;
+}
+
 export async function createFixtureRepo(): Promise<FixtureRepo> {
   const repo = await mkdtemp(join(tmpdir(), "patchledger-fixture-"));
   await git(repo, ["init", "-b", "main"]);
@@ -43,6 +47,30 @@ export async function createPolicyFailureRepo(): Promise<FixtureRepo> {
   await git(fixture.repo, ["add", "."]);
   await git(fixture.repo, ["commit", "-m", "oops"]);
   return fixture;
+}
+
+export async function createRenameFixtureRepo(): Promise<RenameFixtureRepo> {
+  const repo = await mkdtemp(join(tmpdir(), "patchledger-rename-fixture-"));
+  await git(repo, ["init", "-b", "main"]);
+  await git(repo, ["config", "user.name", "Patch Ledger Test"]);
+  await git(repo, ["config", "user.email", "patchledger@example.invalid"]);
+
+  await write(repo, "src/old/file name.txt", "first line\nsecond line\n");
+  await write(repo, "old name.txt", "unchanged\n");
+  await git(repo, ["add", "."]);
+  await git(repo, ["commit", "-m", "chore: seed rename fixture"]);
+
+  await git(repo, ["checkout", "-b", "feature/rename-files"]);
+  await mkdir(join(repo, "src/new"), { recursive: true });
+  await git(repo, ["mv", "src/old/file name.txt", "src/new/file name.txt"]);
+  await write(repo, "src/new/file name.txt", "first line\nsecond line\nthird line\n");
+  await git(repo, ["mv", "old name.txt", "new name.txt"]);
+  await git(repo, ["commit", "-am", "refactor: rename fixture files"]);
+  const { stdout } = await execFileAsync("git", ["-C", repo, "rev-parse", "HEAD"]);
+
+  const testLog = join(repo, "test.log");
+  await writeFile(testLog, "PASS rename fixture\n", "utf8");
+  return { repo, testLog, renameCommit: stdout.trim() };
 }
 
 async function write(repo: string, path: string, content: string): Promise<void> {
