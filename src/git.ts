@@ -40,21 +40,36 @@ export async function listCommits(repo: string, base: string, head: string): Pro
 }
 
 export async function listCommitFiles(repo: string, commit: string): Promise<FileChange[]> {
-  const output = await runGit(repo, ["show", "--numstat", "--format=", "--find-renames", commit]);
-  return output
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [additionsRaw, deletionsRaw, ...pathParts] = line.split(/\s+/);
-      const path = pathParts.join(" ");
-      return {
-        path: normalizeRenamePath(path),
-        additions: additionsRaw === "-" ? 0 : Number.parseInt(additionsRaw, 10),
-        deletions: deletionsRaw === "-" ? 0 : Number.parseInt(deletionsRaw, 10),
-        status: "modified",
-      };
+  const output = await runGit(repo, ["show", "--numstat", "-z", "--format=", "--find-renames", commit]);
+  const fields = output.split("\0");
+  const files: FileChange[] = [];
+
+  for (let index = 0; index < fields.length;) {
+    const record = fields[index++];
+    if (!record) {
+      continue;
+    }
+
+    const firstTab = record.indexOf("\t");
+    const secondTab = record.indexOf("\t", firstTab + 1);
+    const additionsRaw = record.slice(0, firstTab);
+    const deletionsRaw = record.slice(firstTab + 1, secondTab);
+    const recordedPath = record.slice(secondTab + 1);
+    const path = recordedPath || fields[index + 1];
+
+    if (!recordedPath) {
+      index += 2;
+    }
+
+    files.push({
+      path,
+      additions: additionsRaw === "-" ? 0 : Number.parseInt(additionsRaw, 10),
+      deletions: deletionsRaw === "-" ? 0 : Number.parseInt(deletionsRaw, 10),
+      status: "modified",
     });
+  }
+
+  return files;
 }
 
 export async function changedFiles(repo: string, base: string, head: string): Promise<string[]> {
@@ -73,9 +88,4 @@ async function runGit(repo: string, args: string[]): Promise<string> {
     const detail = maybe.stderr?.trim() || maybe.message || "git command failed";
     throw new PatchLedgerError("git " + args.join(" ") + " failed: " + detail, 1);
   }
-}
-
-function normalizeRenamePath(path: string): string {
-  const match = path.match(/^(.+) => (.+)$/);
-  return match ? match[2] : path;
 }
