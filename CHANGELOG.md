@@ -11,6 +11,10 @@ format and uses semantic versioning when versioned releases are published.
 
 - Initial project setup.
 
+### Fixed
+
+- Preserve complete destination paths and line counts for renamed files, including paths with spaces.
+
 ## Release Links
 
 - Unreleased:
