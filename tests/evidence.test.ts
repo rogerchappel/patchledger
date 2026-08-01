@@ -22,6 +22,20 @@ test("readTestEvidence excludes explicit failing statuses", async () => {
     "FAIL tests/feature.test.ts",
     "Tests: 1 failed, 2 passed, 3 total",
     "npm test failed",
+    "npm test exited with code 1",
+    "pnpm test exit code: 2",
+    "node --test returned exit status 9",
+    "npm test: 1 failure, 8 passed",
+  ].join("\n"));
+
+  assert.deepEqual(evidence, []);
+});
+
+test("readTestEvidence does not treat command names alone as passing", async () => {
+  const evidence = await evidenceFrom([
+    "npm test",
+    "pnpm test running",
+    "node --test started",
   ].join("\n"));
 
   assert.deepEqual(evidence, []);
