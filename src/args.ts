@@ -96,8 +96,11 @@ export function parseArgs(argv: string[]): CliOptions {
 }
 
 function parsePositiveInt(flag: string, value: string): number {
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isInteger(parsed) || parsed < 1) {
+  if (!/^[1-9]\d*$/.test(value)) {
+    throw new PatchLedgerError(flag + " must be a positive integer", 2);
+  }
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed)) {
     throw new PatchLedgerError(flag + " must be a positive integer", 2);
   }
   return parsed;

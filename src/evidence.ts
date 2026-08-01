@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 
 const testWords = /\b(test|tests|tested|verify|verified|validation|smoke|vitest|jest|node --test|npm test|pnpm test|pytest|cargo test|go test)\b/i;
-const passingEvidence = /pass|ok|success|npm test|pnpm test|node --test|validated|smoke/i;
+const passingEvidence = /pass|ok|success|validated|smoke/i;
 const explicitFailure =
-  /^(?:fail(?:ed|ure)?|error|npm err!)\b|\b[1-9]\d*\s+(?:failed|failures?|errors?)\b|\b(?:tests?|test suites?|validation|verification|smoke(?: test)?|command|run)\s*:?\s+(?:failed|failure|error|errored)\b/i;
+  /^(?:fail(?:ed|ure)?|error|npm err!)\b|\b[1-9]\d*\s+(?:failed|failures?|errors?)\b|\b(?:tests?|test suites?|validation|verification|smoke(?: test)?|command|run)\s*:?\s+(?:failed|failure|error|errored)\b|\b(?:exited?\s+(?:with\s+)?|returned\s+)?exit\s+(?:code|status)\s*:?\s*[1-9]\d*\b/i;
 
 export function commitMentionsTests(subject: string, body: string): string[] {
   const text = [subject, body].filter(Boolean).join("\n");
