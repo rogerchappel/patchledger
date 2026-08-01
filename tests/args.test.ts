@@ -31,3 +31,21 @@ test("parseArgs reads write options", () => {
 test("parseArgs rejects unknown options", () => {
   assert.throws(() => parseArgs(["write", "--wat"]), PatchLedgerError);
 });
+
+test("parseArgs rejects malformed limit values", () => {
+  const flags = ["--max-files-per-commit", "--max-lines-per-commit"];
+  const malformedValues = ["8oops", "1.5", "Infinity", "NaN", " 8", "8 ", "0", "-1"];
+
+  for (const flag of flags) {
+    for (const value of malformedValues) {
+      assert.throws(
+        () => parseArgs(["verify", flag, value]),
+        (error: unknown) =>
+          error instanceof PatchLedgerError &&
+          error.exitCode === 2 &&
+          error.message === `${flag} must be a positive integer`,
+        `${flag} should reject ${JSON.stringify(value)}`,
+      );
+    }
+  }
+});
