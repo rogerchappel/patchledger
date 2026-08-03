@@ -41,11 +41,27 @@ test("readTestEvidence does not treat command names alone as passing", async () 
   assert.deepEqual(evidence, []);
 });
 
+test("readTestEvidence rejects passing substrings and missing-test statements", async () => {
+  const evidence = await evidenceFrom([
+    "hook initialized",
+    "book generated",
+    "successor process started",
+    "hook initialized but no tests were run",
+    "Tests: 0 total",
+    "No test files found, exiting with code 0",
+  ].join("\n"));
+
+  assert.deepEqual(evidence, []);
+});
+
 test("readTestEvidence accepts passing TAP and summary formats", async () => {
   const evidence = await evidenceFrom([
     "ok 1 - reports when a test failed",
     "PASS tests/feature.test.ts",
     "Tests: 5 passed, 0 failed, 5 total",
+    "Test Suites: 2 passed, 2 total",
+    "12 passing (245ms)",
+    "smoke test passed",
     "validation successful",
   ].join("\n"));
 
@@ -53,6 +69,9 @@ test("readTestEvidence accepts passing TAP and summary formats", async () => {
     "ok 1 - reports when a test failed",
     "PASS tests/feature.test.ts",
     "Tests: 5 passed, 0 failed, 5 total",
+    "Test Suites: 2 passed, 2 total",
+    "12 passing (245ms)",
+    "smoke test passed",
     "validation successful",
   ]);
 });
