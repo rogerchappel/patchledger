@@ -37,11 +37,67 @@ jobs:
         run: node /tmp/releasebox/bin/releasebox.js check .
       - name: Run release checks
         run: npm run release:check
-      - name: Build package
-        run: npm pack
+      - name: Validate tag and pack one artifact
+        id: package
+        run: |
+          set -euo pipefail
+          version="$(node scripts/release-guard.mjs validate-tag "$GITHUB_REF_NAME" package.json)"
+          name="$(node -p "require('./package.json').name")"
+          mkdir release-artifacts
+          npm pack --json --pack-destination release-artifacts > pack.json
+          test "$(find release-artifacts -maxdepth 1 -name '*.tgz' | wc -l | tr -d ' ')" = 1
+          artifact="$(find release-artifacts -maxdepth 1 -name '*.tgz' -print)"
+          {
+            echo "version=$version"
+            echo "name=$name"
+            echo "artifact=$artifact"
+          } >> "$GITHUB_OUTPUT"
+      - name: Publish exact version when absent
+        env:
+          PACKAGE_NAME: ${{ steps.package.outputs.name }}
+          PACKAGE_VERSION: ${{ steps.package.outputs.version }}
+          ARTIFACT: ${{ steps.package.outputs.artifact }}
+        run: |
+          set -euo pipefail
+          if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version --json > published.json 2> registry-error.log; then
+            published="$(tr -d '"[:space:]' < published.json)"
+          elif grep -qE 'E404|404 Not Found' registry-error.log; then
+            published=""
+          else
+            cat registry-error.log >&2
+            exit 1
+          fi
+          if [ "$(node scripts/release-guard.mjs is-published "$PACKAGE_VERSION" "$published")" = false ]; then
+            npm publish "$ARTIFACT" --access public --provenance
+          else
+            echo "$PACKAGE_NAME@$PACKAGE_VERSION is already published; verifying it instead of republishing."
+          fi
+      - name: Verify registry artifact and CLI
+        env:
+          PACKAGE_NAME: ${{ steps.package.outputs.name }}
+          PACKAGE_VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version dist.integrity --json > registry.json && \
+              node scripts/release-guard.mjs verify-registry "$PACKAGE_VERSION" pack.json registry.json && break
+            test "$attempt" -lt 5
+            sleep 10
+          done
+          consumer="$(mktemp -d)"
+          npm install --prefix "$consumer" --ignore-scripts --no-audit --no-fund "$PACKAGE_NAME@$PACKAGE_VERSION"
+          "$consumer/node_modules/.bin/patchledger" --help >/dev/null
       - name: Generate release notes
         run: node /tmp/releasebox/bin/releasebox.js notes . > RELEASE_NOTES.md
-      - name: Create GitHub release
+      - name: Create or repair GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" --notes-file RELEASE_NOTES.md *.tgz
+          ARTIFACT: ${{ steps.package.outputs.artifact }}
+        shell: bash
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
+            gh release upload "$GITHUB_REF_NAME" "$ARTIFACT" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md "$ARTIFACT"
+          fi

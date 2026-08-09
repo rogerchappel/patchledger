@@ -39,6 +39,18 @@ jobs:
         run: node /tmp/releasebox/bin/releasebox.js check .
       - name: Run release checks
         run: npm run release:check
+      - name: Exercise release guards without publishing
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          node scripts/release-guard.mjs validate-tag "v$version" package.json
+          mkdir release-artifacts
+          npm pack --json --pack-destination release-artifacts > pack.json
+          test "$(find release-artifacts -maxdepth 1 -name '*.tgz' | wc -l | tr -d ' ')" = 1
+          integrity="$(node -e "console.log(JSON.parse(require('fs').readFileSync('pack.json'))[0].integrity)")"
+          printf '{"version":"%s","dist":{"integrity":"%s"}}\n' "$version" "$integrity" > registry-fixture.json
+          node scripts/release-guard.mjs is-published "$version" "$version" | grep -Fx true
+          node scripts/release-guard.mjs verify-registry "$version" pack.json registry-fixture.json
       - name: Release notes preview
         run: |
           node /tmp/releasebox/bin/releasebox.js notes . > release-notes-preview.md

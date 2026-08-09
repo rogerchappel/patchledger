@@ -27,4 +27,4 @@ Status: release candidate
 
 - Replace generated README placeholder install/use examples with package-specific CLI examples.
 - Replace generated security-policy placeholder text before a broad production announcement.
-- Decide whether the first public tag should publish only a GitHub release or also publish to npm.
+- Create the reviewed `v<version>` tag when the first public npm release is approved.
