@@ -7,6 +7,13 @@ on:
       - releasebox.config.json
       - package.json
       - package-lock.json
+      - tsconfig*.json
+      - src/**
+      - tests/**
+      - scripts/package-smoke.sh
+      - scripts/release-guard.mjs
+      - scripts/release-guard.test.mjs
+      - scripts/release-dry-run.test.mjs
       - .github/workflows/release*.yml
 
 permissions:
