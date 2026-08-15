@@ -75,3 +75,24 @@ test("readTestEvidence accepts passing TAP and summary formats", async () => {
     "validation successful",
   ]);
 });
+
+test("readTestEvidence rejects an entire mixed TAP log", async () => {
+  const evidence = await evidenceFrom([
+    "ok 1 - first test",
+    "not ok 2 - regression",
+    "# pass 1",
+    "# fail 1",
+  ].join("\n"));
+
+  assert.deepEqual(evidence, []);
+});
+
+test("readTestEvidence rejects pass summaries followed by failures", async () => {
+  const evidence = await evidenceFrom([
+    "Tests: 5 passed, 5 total",
+    "validation successful",
+    "npm test exited with code 1",
+  ].join("\n"));
+
+  assert.deepEqual(evidence, []);
+});

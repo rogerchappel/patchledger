@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { writeFile } from "node:fs/promises";
 import { analyzePatch } from "../src/analyze.js";
 import { listCommitFiles } from "../src/git.js";
 import { hasErrors } from "../src/policy.js";
@@ -22,6 +23,30 @@ test("analyzePatch builds a ledger from a real git range", async () => {
   assert.equal(ledger.summary.changedFileCount, 2);
   assert.equal(ledger.summary.verificationEvidence.length, 1);
   assert.equal(hasErrors(ledger.issues), false);
+});
+
+test("analyzePatch reports missing evidence for a mixed pass and fail log", async () => {
+  const fixture = await createFixtureRepo();
+  await writeFile(fixture.testLog, [
+    "ok 1 - first test",
+    "not ok 2 - regression",
+    "# pass 1",
+    "# fail 1",
+  ].join("\n"), "utf8");
+
+  const ledger = await analyzePatch({
+    repo: fixture.repo,
+    base: "main",
+    head: "feature/review-ledger",
+    testLog: fixture.testLog,
+    maxFilesPerCommit: 4,
+    maxLinesPerCommit: 200,
+    allowMissingTests: false,
+  });
+
+  assert.deepEqual(ledger.summary.verificationEvidence, []);
+  assert.ok(ledger.issues.some((issue) => issue.code === "missing-test-evidence"));
+  assert.equal(hasErrors(ledger.issues), true);
 });
 
 test("analyzePatch reports policy errors for weak commit hygiene", async () => {
