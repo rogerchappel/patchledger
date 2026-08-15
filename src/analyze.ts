@@ -1,5 +1,5 @@
 import { assertGitRange, changedFiles, listCommitFiles, listCommits, resolveRepoRoot } from "./git.js";
-import { commitMentionsTests, readTestEvidence } from "./evidence.js";
+import { commitMentionsTests, readTestEvidenceResult } from "./evidence.js";
 import { evaluatePolicy, isConventionalCommit } from "./policy.js";
 import { fileRiskHints, inferMixedConcern } from "./risk.js";
 import type { AnalyzeOptions, CommitEvidence, PatchLedger } from "./types.js";
@@ -7,14 +7,15 @@ import type { AnalyzeOptions, CommitEvidence, PatchLedger } from "./types.js";
 export async function analyzePatch(options: AnalyzeOptions): Promise<PatchLedger> {
   await assertGitRange(options.repo, options.base, options.head);
 
-  const [repoRoot, commits, changedFileList, globalTestEvidence] = await Promise.all([
+  const [repoRoot, commits, changedFileList, testLogResult] = await Promise.all([
     resolveRepoRoot(options.repo),
     listCommits(options.repo, options.base, options.head),
     changedFiles(options.repo, options.base, options.head),
-    readTestEvidence(options.testLog),
+    readTestEvidenceResult(options.testLog),
   ]);
 
   const entries: CommitEvidence[] = [];
+  const globalTestEvidence = testLogResult.evidence;
   for (const commit of commits) {
     const files = await listCommitFiles(options.repo, commit.hash);
     const totalAdditions = files.reduce((sum, file) => sum + file.additions, 0);
@@ -40,6 +41,7 @@ export async function analyzePatch(options: AnalyzeOptions): Promise<PatchLedger
     maxLinesPerCommit: options.maxLinesPerCommit,
     allowMissingTests: options.allowMissingTests,
     hasGlobalTestEvidence: globalTestEvidence.length > 0,
+    failedTestLog: testLogResult.failed,
   });
 
   return {
