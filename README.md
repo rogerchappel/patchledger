@@ -29,8 +29,10 @@ node dist/src/cli.js verify --repo . --base main --head HEAD --test-log test.log
 
 Test-log evidence accepts passing TAP lines (`ok 1 ...`) and explicit passing or
 successful summaries such as `Tests: 5 passed, 0 failed`. A test command name
-by itself is not proof of success, and failure summaries or nonzero exit codes
-are rejected even when the line also names a test command.
+by itself is not proof of success. Test logs are evaluated as a whole: any
+explicit failure, nonzero failed/error summary, or nonzero exit status
+invalidates all passing lines in that log, so mixed results cannot be used as
+global test evidence.
 
 The `--max-files-per-commit` and `--max-lines-per-commit` values must be positive
 base-10 integers made only of digits. Decimal values, signs, whitespace, numeric

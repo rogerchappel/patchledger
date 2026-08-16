@@ -7,7 +7,7 @@ const passingContext =
 const noTestEvidence =
   /\b(?:no tests? (?:were )?run|no test files? (?:were )?found|tests?\s*:\s*0\s+(?:total|passed)|0\s+tests?\s+(?:run|passed|total))\b/i;
 const explicitFailure =
-  /^(?:fail(?:ed|ure)?|error|npm err!)\b|\b[1-9]\d*\s+(?:failed|failures?|errors?)\b|\b(?:tests?|test suites?|validation|verification|smoke(?: test)?|command|run)\s*:?\s+(?:failed|failure|error|errored)\b|\b(?:exited?\s+(?:with\s+)?|returned\s+)?exit\s+(?:code|status)\s*:?\s*[1-9]\d*\b/i;
+  /^(?:fail(?:ed|ure)?|error|npm err!)\b|^#\s*fail\s+[1-9]\d*\b|\b[1-9]\d*\s+(?:failed|failures?|errors?)\b|\b(?:tests?|test suites?|validation|verification|smoke(?: test)?|command|run)\s*:?\s+(?:failed|failure|error|errored)\b|\b(?:exited?\s+(?:with\s+)?|returned\s+)?(?:exit(?:ed)?(?:\s+with)?\s+)?(?:code|status)\s*:?\s*[1-9]\d*\b/i;
 
 export function commitMentionsTests(subject: string, body: string): string[] {
   const text = [subject, body].filter(Boolean).join("\n");
@@ -18,26 +18,45 @@ export function commitMentionsTests(subject: string, body: string): string[] {
 }
 
 export async function readTestEvidence(testLog: string | undefined): Promise<string[]> {
+  return (await readTestEvidenceResult(testLog)).evidence;
+}
+
+export async function readTestEvidenceResult(
+  testLog: string | undefined,
+): Promise<{ evidence: string[]; failed: boolean }> {
   if (!testLog) {
-    return [];
+    return { evidence: [], failed: false };
   }
 
   const content = await readFile(testLog, "utf8");
-  return content
+  const lines = content
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.length > 0)
+    .filter((line) => line.length > 0);
+
+  const failed = lines.some((line) => {
+    if (/^not ok\b/i.test(line)) {
+      return true;
+    }
+    if (/^ok(?:\s+\d+)?\b/i.test(line)) {
+      return false;
+    }
+    return explicitFailure.test(line);
+  });
+  if (failed) {
+    return { evidence: [], failed: true };
+  }
+
+  const evidence = lines
     .filter((line) => {
-      if (/^not ok\b/i.test(line)) {
-        return false;
-      }
       if (/^ok(?:\s+\d+)?\b/i.test(line)) {
         return true;
       }
-      if (explicitFailure.test(line) || noTestEvidence.test(line)) {
+      if (noTestEvidence.test(line)) {
         return false;
       }
       return /^pass\b/i.test(line) || passingSummary.test(line) || passingContext.test(line);
     })
     .slice(0, 20);
+  return { evidence, failed: false };
 }

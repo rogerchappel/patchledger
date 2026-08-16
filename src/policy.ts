@@ -13,6 +13,7 @@ export function evaluatePolicy(
     maxLinesPerCommit: number;
     allowMissingTests: boolean;
     hasGlobalTestEvidence: boolean;
+    failedTestLog: boolean;
   },
 ): PolicyIssue[] {
   const issues: PolicyIssue[] = [];
@@ -77,7 +78,13 @@ export function evaluatePolicy(
   }
 
   const hasCommitEvidence = commits.some((entry) => entry.testEvidence.length > 0);
-  if (!options.allowMissingTests && !options.hasGlobalTestEvidence && !hasCommitEvidence) {
+  if (!options.allowMissingTests && options.failedTestLog) {
+    issues.push({
+      level: "error",
+      code: "missing-test-evidence",
+      message: "The supplied test log contains an explicit failure, so none of it can be used as test evidence.",
+    });
+  } else if (!options.allowMissingTests && !options.hasGlobalTestEvidence && !hasCommitEvidence) {
     issues.push({
       level: "error",
       code: "missing-test-evidence",
