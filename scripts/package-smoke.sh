@@ -5,6 +5,22 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 package_dir="$(mktemp -d "${TMPDIR:-/tmp}/patchledger-package-smoke.XXXXXX")"
 trap 'rm -rf "$package_dir"' EXIT
 
+# Self-contained smoke: build the exact src-only artifact this script guards.
+# The script must pass when invoked directly from a clean checkout, so it can
+# never depend on a stale or pre-built dist/ left behind by another command.
+if ! (cd "$repo_root" && npm run build); then
+  echo "Package smoke test failed: the src-only build (npm run build) did not complete." >&2
+  echo "Inspect the build failure, then re-run: bash scripts/package-smoke.sh" >&2
+  exit 2
+fi
+
+for entry in dist/src/index.js dist/src/cli.js; do
+  if [ ! -f "$repo_root/$entry" ]; then
+    echo "Package smoke test failed: $entry is missing after the src-only build." >&2
+    exit 2
+  fi
+done
+
 pack_json="$package_dir/pack.json"
 npm pack --json --pack-destination "$package_dir" --prefix "$repo_root" > "$pack_json"
 
@@ -40,4 +56,4 @@ npm install --ignore-scripts --no-audit --no-fund "$package_dir/$tarball_name" >
 node --input-type=module --eval "await import('patchledger')"
 "$consumer_dir/node_modules/.bin/patchledger" --help >/dev/null
 
-printf 'Package smoke test passed: packed file list excludes tests; import and CLI entry points resolve from the exact tarball.\n'
+printf 'Package smoke test passed: src-only artifact built from scratch; packed file list excludes tests; import and CLI entry points resolve from the exact tarball.\n'
