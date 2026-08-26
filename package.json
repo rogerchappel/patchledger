@@ -24,7 +24,7 @@
     "test": "npm run build && rm -rf dist-test && tsc -p tsconfig.test.json && node --test dist-test/tests/**/*.test.js",
     "fixtures:prepare": "bash fixtures/prepare-smoke-repo.sh",
     "smoke": "npm run build && npm run fixtures:prepare && node dist/src/cli.js write --repo fixtures/smoke-repo --base main --head feature/review-ledger --test-log fixtures/smoke-repo/test.log --out /tmp/patchledger-smoke.md && node dist/src/cli.js verify --repo fixtures/smoke-repo --base main --head feature/review-ledger --test-log fixtures/smoke-repo/test.log --max-files-per-commit 4",
-    "package:smoke": "npm run build && bash scripts/package-smoke.sh",
+    "package:smoke": "bash scripts/package-smoke.sh",
     "release:test": "node --test scripts/*.test.mjs",
     "release:check": "npm run check && npm test && npm run release:test && npm run smoke && npm run package:smoke"
   },
