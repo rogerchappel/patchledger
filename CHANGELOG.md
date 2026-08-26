@@ -14,6 +14,7 @@ format and uses semantic versioning when versioned releases are published.
 ### Fixed
 
 - Preserve complete destination paths and line counts for renamed files, including paths with spaces.
+- Make `scripts/package-smoke.sh` self-contained: it builds the src-only artifact itself before packing, so standalone invocation from a clean checkout no longer fails with `ERR_MODULE_NOT_FOUND` or leaks stale test artifacts.
 
 ## Release Links
 
