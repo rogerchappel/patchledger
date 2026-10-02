@@ -43,6 +43,13 @@ suffixes, and non-finite values are rejected.
 ```sh
 npm run release:check
 ```
+
+### Smoke fixture side effects
+
+`npm run smoke` runs `fixtures/prepare-smoke-repo.sh`, which rebuilds and mutates
+`fixtures/smoke-repo`. Run it from an isolated checkout, or review the fixture
+state before and after the command; do not rely on uncommitted changes inside
+that fixture being preserved.
 ## CLI Help Smoke
 
 Confirm the packaged command starts and prints its help text before relying on a release tarball or downstream automation:
