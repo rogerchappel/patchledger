@@ -11,20 +11,25 @@ This is an early v0.1.0 CLI for writing and verifying patch ledgers from local g
 ```sh
 npm install
 npm run build
+patchledger --help
 ```
+
+After building, the declared `patchledger` executable is available from `node_modules/.bin`.
+The help command should exit successfully and list the `write` and `verify`
+commands plus their supported options; it does not inspect a repository.
 
 ## Use
 
 Write a markdown ledger for a branch range:
 
 ```sh
-node dist/src/cli.js write --repo . --base main --head HEAD --out patchledger.md
+patchledger write --repo . --base main --head HEAD --out patchledger.md
 ```
 
 Verify a branch range against review-size and test-evidence policies:
 
 ```sh
-node dist/src/cli.js verify --repo . --base main --head HEAD --test-log test.log
+patchledger verify --repo . --base main --head HEAD --test-log test.log
 ```
 
 Test-log evidence accepts passing TAP lines (`ok 1 ...`) and explicit passing or
