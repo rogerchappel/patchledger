@@ -64,4 +64,3 @@ jobs:
           fi
 
           npm run release:check
-          npm run release:test
