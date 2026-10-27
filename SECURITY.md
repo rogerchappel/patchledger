@@ -2,57 +2,32 @@
 
 ## Supported Versions
 
-Replace this section with the supported versions for `patchledger`.
-
-Example:
-
-```md
-| Version | Supported |
-| --- | --- |
-| .x | Yes |
-| < .0 | No |
-```
-
-If the project does not publish versioned releases yet, say that clearly.
+Patchledger is currently at version 0.1.0 and does not yet publish a formal
+supported-version policy. Please use the latest available source or package
+version; fixes and support are not guaranteed for older versions.
 
 ## Reporting a Vulnerability
 
-Please do not report suspected vulnerabilities in public issues, pull requests, or discussions.
-
-Ask maintainers for the private security reporting path before sharing details.
-
-If no private reporting path exists yet, ask maintainers through public project channels for a private reporting path. Do not include exploit details, secrets, personal data, or sensitive technical details in public messages.
-
-## What to Include
-
-When a private reporting path is available, include:
-
-- A clear description of the issue.
-- Affected versions, files, packages, workflows, or configuration.
-- Steps to reproduce, proof of concept, or attack scenario when safe to share.
-- Potential impact.
-- Suggested mitigation, if known.
-
-## Response Expectations
-
-Maintainers review good-faith reports as capacity allows.
-
-Do not imply paid support, guaranteed response times, guaranteed fixes, or service-level agreements unless `patchledger` explicitly provides them.
+Please do not disclose suspected vulnerabilities in public issues, pull
+requests, or discussions. No private reporting endpoint is currently published.
+If you believe you have found a security issue, open a brief public issue asking
+the maintainers for a private reporting channel. Do not include exploit details,
+proof-of-concept payloads, secrets, personal data, or sensitive technical
+information in that request. Share details only after the maintainers provide
+a private channel.
 
 ## Scope
 
-In scope:
+Reports may concern patchledger's CLI, its local Git metadata and test-log
+handling, packaged defaults, or project-maintained CI and release configuration.
+Patchledger is a local-first tool: it reads local repository history and
+caller-supplied test logs, and does not provide hosted processing or a security
+response service. Reports about unrelated downstream projects and general
+support requests are out of scope.
 
-- Vulnerabilities in patchledger.
-- Insecure default configuration shipped by this project.
-- CI, release, or dependency guidance maintained by this project.
+## Response and Disclosure
 
-Out of scope:
-
-- General support requests.
-- Requests for guaranteed maintenance timelines.
-- Issues in unrelated downstream projects.
-
-## Disclosure
-
-Coordinate disclosure with maintainers before publishing vulnerability details.
+Maintainers will review good-faith reports as capacity allows. No response time,
+fix, or service-level agreement is guaranteed. Please coordinate public
+disclosure with maintainers and allow an opportunity to assess and address the
+issue before publishing technical details.

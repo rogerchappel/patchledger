@@ -1,84 +1,79 @@
 # patchledger
 
-Local-first git patch evidence ledger CLI for reviewable branches.
+Patchledger is a local-first CLI for writing and verifying Markdown evidence
+ledgers from Git commit ranges. It can report commit-level change size and
+optional test-log evidence; it does not run the recorded tests or establish
+that their results are trustworthy.
 
-## Status
+## Requirements
 
-This is an early v0.1.0 CLI for writing and verifying patch ledgers from local git history and optional test logs.
+- Node.js 20 or later
+- Git available on `PATH` for commands that inspect a repository
 
-## Install
-
-```sh
-npm install
-npm run build
-patchledger --help
-```
-
-After building, the declared `patchledger` executable is available from `node_modules/.bin`.
-The help command should exit successfully and list the `write` and `verify`
-commands plus their supported options; it does not inspect a repository.
-
-## Use
-
-Write a markdown ledger for a branch range:
+## Install from source
 
 ```sh
-patchledger write --repo . --base main --head HEAD --out patchledger.md
-```
-
-Verify a branch range against review-size and test-evidence policies:
-
-```sh
-patchledger verify --repo . --base main --head HEAD --test-log test.log
-```
-
-Test-log evidence accepts passing TAP lines (`ok 1 ...`) and explicit passing or
-successful summaries such as `Tests: 5 passed, 0 failed`. A test command name
-by itself is not proof of success. Test logs are evaluated as a whole: any
-explicit failure, nonzero failed/error summary, or nonzero exit status
-invalidates all passing lines in that log, so mixed results cannot be used as
-global test evidence.
-
-The `--max-files-per-commit` and `--max-lines-per-commit` values must be positive
-base-10 integers made only of digits. Decimal values, signs, whitespace, numeric
-suffixes, and non-finite values are rejected.
-
-## Verify
-
-```sh
-npm run release:check
-```
-
-### Smoke fixture side effects
-
-`npm run smoke` runs `fixtures/prepare-smoke-repo.sh`, which rebuilds and mutates
-`fixtures/smoke-repo`. Run it from an isolated checkout, or review the fixture
-state before and after the command; do not rely on uncommitted changes inside
-that fixture being preserved.
-## CLI Help Smoke
-
-Confirm the packaged command starts and prints its help text before relying on a release tarball or downstream automation:
-
-```bash
+npm ci
 npm run build
 node ./dist/src/cli.js --help
 ```
 
-The command should exit successfully, print the available options, and avoid reading project files or contacting external services.
+The package exposes the `patchledger` executable after installation. When
+working in this checkout, use `node ./dist/src/cli.js` (or `npx patchledger`
+after installing the package) to invoke it.
 
-## Limitations
+## Write a ledger
 
-- Verification uses local git metadata and any test log supplied by the caller.
-- Missing test evidence fails verification unless `--allow-missing-tests` is used.
+From a Git repository, write a ledger for the commits reachable from `HEAD`
+but not `main`:
 
-## Contributing
+```sh
+node /path/to/patchledger/dist/src/cli.js write \
+  --repo . --base main --head HEAD --out patchledger.md
+```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution expectations. Changes should be small, reviewable, and verified before review.
+Replace `/path/to/patchledger` with the checkout or installation location. The
+base and head are Git revisions; choose a base that exists in the target
+repository. The output is written to the requested path.
 
-## Security
+## Verify a ledger range
 
-See [SECURITY.md](SECURITY.md) for vulnerability reporting guidance.
+```sh
+node /path/to/patchledger/dist/src/cli.js verify \
+  --repo . --base main --head HEAD --test-log test.log \
+  --max-files-per-commit 4
+```
 
-## License
+Verification checks the selected commit range against configured review-size
+limits and supplied test evidence. It does not execute tests. A test log must
+contain passing TAP lines (`ok 1 ...`) or an explicit successful summary (for
+example, `Tests: 5 passed, 0 failed`). A command name alone is not proof of
+success. Any explicit failure, nonzero failure/error summary, or nonzero exit
+status invalidates passing lines in that log. Missing test evidence fails
+verification unless `--allow-missing-tests` is supplied.
 
-MIT
+`--max-files-per-commit` and `--max-lines-per-commit` accept positive
+base-10 integers only. Use `--help` on the `write` or `verify` command for the
+complete option list.
+
+## Verify this checkout
+
+```sh
+npm ci
+npm run release:check
+```
+
+`npm run smoke` rebuilds and mutates `fixtures/smoke-repo`; run it only in a
+checkout where that fixture state may be changed.
+
+## Security and limitations
+
+Patchledger operates on local Git metadata and optional caller-provided test
+logs. It does not run tests, contact external services for ledger generation,
+or independently validate the provenance of evidence. See [SECURITY.md](SECURITY.md)
+for vulnerability reporting guidance.
+
+## Contributing and license
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under the MIT License; see
+[LICENSE](LICENSE).
